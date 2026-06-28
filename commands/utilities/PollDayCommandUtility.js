@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const pollTracker = require('./PollTrackerUtility');
 const { getDayOptions } = require('./dayOptions');
+const { isMovieHost } = require('./HostCheckUtility');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -12,6 +13,13 @@ module.exports = {
 				.setMinValue(1)
 				.setMaxValue(768)),
 	async execute(interaction) {
+
+		if (!isMovieHost(interaction)) {
+	        await interaction.reply({ content: 'Only a Movie Host can use this.', ephemeral: true });
+
+			return;
+		}
+
 		const hours = interaction.options.getInteger('hours') ?? 24;
 		const options = getDayOptions();
 		const answers = options.map((option) => ({ text: option.label }));

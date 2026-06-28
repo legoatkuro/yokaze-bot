@@ -3,6 +3,7 @@ const { moviesDataChannelID } = require('../../config.json');
 const pollTracker = require('./PollTrackerUtility');
 const { getPollWinner } = require('./GetPollWinner');
 const { getDayOptions } = require('./DayOptions');
+const { isMovieHost } = require('./HostCheckUtility');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -68,6 +69,13 @@ module.exports = {
 		}
 	},
 	async execute(interaction) {
+
+		if (!isMovieHost(interaction)) {
+	        await interaction.reply({ content: 'Only a Movie Host can use this.', ephemeral: true });
+
+	        return;
+		}
+
 		const title = interaction.options.getString('movie');
 		const dayValue = interaction.options.getString('day');
 

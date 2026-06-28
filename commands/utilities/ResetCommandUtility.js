@@ -1,9 +1,16 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { moviesDataChannelID } = require('../../config.json');
+const { isMovieHost } = require('./HostCheckUtility');
 
 module.exports = {
 	data: new SlashCommandBuilder().setName('reset').setDescription('Resets stored movies for polls.'),
 	async execute(interaction) {
+		if (!isMovieHost(interaction)) {
+			await interaction.reply({ content: 'Only a Movie Host can use this.', ephemeral: true });
+
+			return;
+		}
+
 		const channel = await interaction.client.channels.fetch(moviesDataChannelID);
 
 		let deletedTotal = 0;
