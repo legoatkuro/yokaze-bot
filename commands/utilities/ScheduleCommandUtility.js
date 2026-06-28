@@ -1,5 +1,5 @@
-const { SlashCommandBuilder, ChannelType, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel } = require('discord.js');
-const { moviesDataChannelID, movieRoleId } = require('../../config.json');
+const { SlashCommandBuilder, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel } = require('discord.js');
+const { moviesDataChannelID, movieRoleId, theaterVoiceChannelId } = require('../../config.json');
 const pollTracker = require('./PollTrackerUtility');
 const { getPollWinner } = require('./GetPollWinner');
 const { getDayOptions } = require('./DayOptions');
@@ -92,9 +92,7 @@ module.exports = {
 
 		const endTime = new Date(startTime.getTime() + 3 * 60 * 60 * 1000);
 
-		const channel = interaction.guild.channels.cache.find(
-			(c) => c.name === 'General' && c.type === ChannelType.GuildVoice,
-		);
+		const channel = interaction.guild.channels.cache.get(theaterVoiceChannelId);
 
 		if (!channel) {
 			await interaction.reply('Couldn\'t find a voice channel called "General".');
