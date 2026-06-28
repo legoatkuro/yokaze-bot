@@ -34,7 +34,7 @@ module.exports = {
 				question: { text: 'What should we watch this week?' },
 				answers,
 				duration: hours,
-				allowMultiselect: false,
+				allowMultiselect: true,
 			},
 		});
 

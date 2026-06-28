@@ -29,7 +29,7 @@ module.exports = {
 				question: { text: 'When should we watch it?' },
 				answers,
 				duration: hours,
-				allowMultiselect: false,
+				allowMultiselect: true,
 			},
 		});
 
