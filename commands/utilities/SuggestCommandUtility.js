@@ -10,6 +10,8 @@ module.exports = {
 				.setDescription('The movie you want to suggest')
 				.setRequired(true)),
 	async execute(interaction) {
+		await interaction.deferReply();
+
 		const title = interaction.options.getString('title');
 
 		const response = await fetch(
@@ -22,7 +24,7 @@ module.exports = {
 		const movie = data.results[0];
 
 		if (!movie) {
-			await interaction.reply(`Couldn't find a movie called "${title}" on TMDB.`);
+			await interaction.editReply(`Couldn't find a movie called "${title}" on TMDB.`);
 			return;
 		}
 
@@ -35,6 +37,6 @@ module.exports = {
 
 		await channel.send(JSON.stringify(storedData));
 
-		await interaction.reply(`Found: **${movie.title}** (${movie.release_date?.slice(0, 4)})\n${movie.overview}\n\nAdded to the suggestion list!`);
+		await interaction.editReply(`Found: **${movie.title}** (${movie.release_date?.slice(0, 4)})\n${movie.overview}\n\nAdded to the suggestion list!`);
 	},
 };

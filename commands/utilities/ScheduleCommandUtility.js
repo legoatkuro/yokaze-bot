@@ -69,73 +69,74 @@ module.exports = {
 		}
 	},
 	async execute(interaction) {
+        	if (!isMovieHost(interaction)) {
+		    await interaction.reply({ content: 'Only a Movie Host can use this.', ephemeral: true });
 
-		if (!isMovieHost(interaction)) {
-	        await interaction.reply({ content: 'Only a Movie Host can use this.', ephemeral: true });
+		    return;
+	    }
 
-	        return;
-		}
+	    await interaction.deferReply();
 
-		const title = interaction.options.getString('movie');
-		const dayValue = interaction.options.getString('day');
+	    const title = interaction.options.getString('movie');
+	    const dayValue = interaction.options.getString('day');
 
-		if (dayValue === 'other') {
-			await interaction.reply('Type an actual date instead of picking "Other / Later" — format: YYYY-MM-DD (e.g. 2026-07-05).');
-			return;
-		}
+	    if (dayValue === 'other') {
+		    await interaction.editReply('Type an actual date instead of picking "Other / Later" — format: YYYY-MM-DD (e.g. 2026-07-05).');
+		    return;
+	    }
 
-		const startTime = new Date(`${dayValue}T21:00:00`);
-		if (isNaN(startTime.getTime())) {
-			await interaction.reply('That date didn\'t parse right. Use format YYYY-MM-DD, e.g. 2026-07-05.');
-			return;
-		}
+	    const startTime = new Date(`${dayValue}T21:00:00`);
+	    if (isNaN(startTime.getTime())) {
+		    await interaction.editReply('That date didn\'t parse right. Use format YYYY-MM-DD, e.g. 2026-07-05.');
+		    return;
+	    }
 
-		const endTime = new Date(startTime.getTime() + 3 * 60 * 60 * 1000);
+	    const endTime = new Date(startTime.getTime() + 3 * 60 * 60 * 1000);
 
-		const channel = interaction.guild.channels.cache.get(theaterVoiceChannelId);
+	    const channel = interaction.guild.channels.cache.get(theaterVoiceChannelId);
 
-		if (!channel) {
-			await interaction.reply('Couldn\'t find a voice channel called "General".');
-			return;
-		}
+	    if (!channel) {
+		    await interaction.editReply('Couldn\'t find the theater voice channel.');
+		    return;
+	    }
 
-		const moviesChannel = await interaction.client.channels.fetch(moviesDataChannelID);
-		const messages = await moviesChannel.messages.fetch({ limit: 100 });
+	    const moviesChannel = await interaction.client.channels.fetch(moviesDataChannelID);
+	    const messages = await moviesChannel.messages.fetch({ limit: 100 });
 
-		const match = messages.find((message) => {
-			const data = JSON.parse(message.content);
-			return data.title.toLowerCase() === title.toLowerCase();
-		});
+	    const match = messages.find((message) => {
+		    const data = JSON.parse(message.content);
+		    return data.title.toLowerCase() === title.toLowerCase();
+	    });
 
-		if (!match) {
-			await interaction.reply(`Couldn't find a suggestion called "${title}".`);
-			return;
-		}
+	    if (!match) {
+		    await interaction.editReply(`Couldn't find a suggestion called "${title}".`);
+		    return;
+	    }
 
-		const movie = JSON.parse(match.content);
+	    const movie = JSON.parse(match.content);
 
-		let posterBuffer;
-		if (movie.poster_path) {
-			const posterResponse = await fetch(`https://image.tmdb.org/t/p/w500${movie.poster_path}`);
-			posterBuffer = Buffer.from(await posterResponse.arrayBuffer());
-		}
+	    let posterBuffer;
+	    if (movie.poster_path) {
+		    const posterResponse = await fetch(`https://image.tmdb.org/t/p/w500${movie.poster_path}`);
+		    posterBuffer = Buffer.from(await posterResponse.arrayBuffer());
+	    }
 
-		await interaction.guild.scheduledEvents.create({
-			name: `Movie Night: ${movie.title}`,
-			scheduledStartTime: startTime,
-			scheduledEndTime: endTime,
-			privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
-			entityType: GuildScheduledEventEntityType.Voice,
-			channel: channel.id,
-			description: movie.overview,
-			image: posterBuffer,
-		});
+	    await interaction.guild.scheduledEvents.create({
+		    name: `Movie Night: ${movie.title}`,
+		    scheduledStartTime: startTime,
+		    scheduledEndTime: endTime,
+		    privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
+		    entityType: GuildScheduledEventEntityType.Voice,
+		    channel: channel.id,
+		    description: movie.overview,
+		    image: posterBuffer,
+	    });
 
-		await interaction.channel.send({
-	    content: `<@&${movieRoleId}> Movie night is set! We're watching **${movie.title}** on <t:${Math.floor(startTime.getTime() / 1000)}:F>`,
-	    allowedMentions: { roles: [movieRoleId] },
-		});
+	    await interaction.channel.send({
+		    content: `<@&${movieRoleId}> Movie night is set! We're watching **${movie.title}** on <t:${Math.floor(startTime.getTime() / 1000)}:F>`,
+		    allowedMentions: { roles: [movieRoleId] },
+	    });
 
-		await interaction.reply(`Event created for **${movie.title}**!`);
+	    await interaction.editReply(`Event created for **${movie.title}**!`);
 	},
 };
