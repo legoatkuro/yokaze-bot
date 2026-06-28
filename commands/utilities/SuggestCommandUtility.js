@@ -27,7 +27,13 @@ module.exports = {
 		}
 
 		const channel = await interaction.client.channels.fetch(moviesDataChannelID);
-		await channel.send(JSON.stringify(movie));
+
+		const storedData = {
+			suggestedBy: interaction.user.id,
+			...movie,
+		};
+
+		await channel.send(JSON.stringify(storedData));
 
 		await interaction.reply(`Found: **${movie.title}** (${movie.release_date?.slice(0, 4)})\n${movie.overview}\n\nAdded to the suggestion list!`);
 	},
