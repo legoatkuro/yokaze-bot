@@ -36,6 +36,17 @@ module.exports = {
 			return;
 		}
 
+		const alreadySuggested = existingMessages.some((message) => {
+			const existingMovie = JSON.parse(message.content);
+			return existingMovie.id === movie.id;
+		});
+
+		if (alreadySuggested) {
+			await interaction.editReply(`**${movie.title}** has already been suggested.`);
+
+			return;
+		}
+
 		const storedData = {
 			suggestedBy: interaction.user.id,
 			...movie,
