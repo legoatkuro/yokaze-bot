@@ -2,31 +2,7 @@ const { SlashCommandBuilder, ChannelType, GuildScheduledEventEntityType, GuildSc
 const { moviesDataChannelID } = require('../../config.json');
 const pollTracker = require('./pollTracker');
 const { getPollWinner } = require('./getPollWinner');
-
-function formatISODate(date) {
-	const year = date.getFullYear();
-	const month = String(date.getMonth() + 1).padStart(2, '0');
-	const day = String(date.getDate()).padStart(2, '0');
-	return `${year}-${month}-${day}`;
-}
-
-function getDayOptions() {
-	const today = new Date();
-	const formatLabel = (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-
-	const options = [
-		{ label: `Today (${formatLabel(today)})`, value: formatISODate(today) },
-	];
-
-	for (let offset = 1; offset <= 7; offset++) {
-		const date = new Date(today);
-		date.setDate(date.getDate() + offset);
-		const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-		options.push({ label: `${dayName} (${formatLabel(date)})`, value: formatISODate(date) });
-	}
-
-	return options;
-}
+const { getDayOptions } = require('./dayOptions');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -39,7 +15,7 @@ module.exports = {
 				.setRequired(true))
 		.addStringOption((option) =>
 			option.setName('day')
-				.setDescription('Which day')
+				.setDescription('Which day (or type YYYY-MM-DD manually)')
 				.setAutocomplete(true)
 				.setRequired(true)),
 	async autocomplete(interaction) {
@@ -49,28 +25,16 @@ module.exports = {
 			const options = getDayOptions();
 			const winnerText = await getPollWinner(interaction.client, pollTracker.dayPoll);
 
-			let winnerValue = null;
-			if (winnerText) {
-				const dateMatch = winnerText.match(/\(([^)]+)\)/);
-				if (dateMatch) {
-					const parsedDate = new Date(`${dateMatch[1]} ${new Date().getFullYear()}`);
-					if (!isNaN(parsedDate.getTime())) {
-						winnerValue = formatISODate(parsedDate);
-					}
-				}
-			}
+			const winnerOption = options.find((option) => option.label === winnerText);
 
 			let orderedOptions = options;
-			if (winnerValue) {
-				const winnerOption = options.find((option) => option.value === winnerValue);
-				if (winnerOption) {
-					orderedOptions = [winnerOption, ...options.filter((option) => option.value !== winnerValue)];
-				}
+			if (winnerOption) {
+				orderedOptions = [winnerOption, ...options.filter((option) => option !== winnerOption)];
 			}
 
 			await interaction.respond(
 				orderedOptions.map((option) => ({
-					name: option.value === winnerValue ? `⭐ ${option.label} (poll winner)` : option.label,
+					name: option === winnerOption ? `⭐ ${option.label} (poll winner)` : option.label,
 					value: option.value,
 				})),
 			);
@@ -107,7 +71,17 @@ module.exports = {
 		const title = interaction.options.getString('movie');
 		const dayValue = interaction.options.getString('day');
 
+		if (dayValue === 'other') {
+			await interaction.reply('Type an actual date instead of picking "Other / Later" — format: YYYY-MM-DD (e.g. 2026-07-05).');
+			return;
+		}
+
 		const startTime = new Date(`${dayValue}T21:00:00`);
+		if (isNaN(startTime.getTime())) {
+			await interaction.reply('That date didn\'t parse right. Use format YYYY-MM-DD, e.g. 2026-07-05.');
+			return;
+		}
+
 		const endTime = new Date(startTime.getTime() + 3 * 60 * 60 * 1000);
 
 		const channel = interaction.guild.channels.cache.find(
