@@ -12,6 +12,14 @@ module.exports = {
 	async execute(interaction) {
 		await interaction.deferReply();
 
+		const channel = await interaction.client.channels.fetch(moviesDataChannelID);
+		const existingMessages = await channel.messages.fetch({ limit: 10 });
+
+		if (existingMessages.size >= 10) {
+			await interaction.editReply('There are already 10 suggestions — run /poll, or have a Movie Host use /reset before suggesting more.');
+			return;
+		}
+
 		const title = interaction.options.getString('title');
 
 		const response = await fetch(
@@ -27,8 +35,6 @@ module.exports = {
 			await interaction.editReply(`Couldn't find a movie called "${title}" on TMDB.`);
 			return;
 		}
-
-		const channel = await interaction.client.channels.fetch(moviesDataChannelID);
 
 		const storedData = {
 			suggestedBy: interaction.user.id,
