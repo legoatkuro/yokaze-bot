@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ChannelType, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel } = require('discord.js');
-const { moviesDataChannelID } = require('../../config.json');
+const { moviesDataChannelID, movieRoleId } = require('../../config.json');
 const pollTracker = require('./PollTrackerUtility');
 const { getPollWinner } = require('./GetPollWinner');
 const { getDayOptions } = require('./DayOptions');
@@ -134,8 +134,8 @@ module.exports = {
 		});
 
 		await interaction.channel.send({
-			content: `@everyone Movie night is set! We're watching **${movie.title}** on <t:${Math.floor(startTime.getTime() / 1000)}:F>`,
-			allowedMentions: { parse: ['everyone'] },
+	    content: `<@&${movieRoleId}> Movie night is set! We're watching **${movie.title}** on <t:${Math.floor(startTime.getTime() / 1000)}:F>`,
+	    allowedMentions: { roles: [movieRoleId] },
 		});
 
 		await interaction.reply(`Event created for **${movie.title}**!`);
