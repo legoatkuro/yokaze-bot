@@ -8,7 +8,29 @@ module.exports = {
 		.addStringOption((option) =>
 			option.setName('title')
 				.setDescription('The movie you want to suggest')
+				.setAutocomplete(true)
 				.setRequired(true)),
+	async autocomplete(interaction) {
+		const typed = interaction.options.getFocused();
+
+		if (!typed) {
+			await interaction.respond([]);
+			return;
+		}
+
+		const response = await fetch(
+			`https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(typed)}`,
+			{ headers: { Authorization: `Bearer ${tmdbToken}` } },
+		);
+		const data = await response.json();
+
+		const choices = data.results.slice(0, 25).map((movie) => ({
+			name: `${movie.title} (${movie.release_date?.slice(0, 4) ?? 'unknown year'})`,
+			value: String(movie.id),
+		}));
+
+		await interaction.respond(choices);
+	},
 	async execute(interaction) {
 		await interaction.deferReply();
 
@@ -20,19 +42,19 @@ module.exports = {
 			return;
 		}
 
-		const title = interaction.options.getString('title');
+		const input = interaction.options.getString('title');
+		const isExactId = /^\d+$/.test(input);
 
-		const response = await fetch(
-			`https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(title)}`,
-			{
-				headers: { Authorization: `Bearer ${tmdbToken}` },
-			},
-		);
+		const url = isExactId
+			? `https://api.themoviedb.org/3/movie/${input}`
+			: `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(input)}`;
+
+		const response = await fetch(url, { headers: { Authorization: `Bearer ${tmdbToken}` } });
 		const data = await response.json();
-		const movie = data.results[0];
+		const movie = isExactId ? data : data.results[0];
 
-		if (!movie) {
-			await interaction.editReply(`Couldn't find a movie called "${title}" on TMDB.`);
+		if (!movie || movie.success === false) {
+			await interaction.editReply(`Couldn't find a movie called "${input}" on TMDB.`);
 			return;
 		}
 
@@ -43,7 +65,6 @@ module.exports = {
 
 		if (alreadySuggested) {
 			await interaction.editReply(`**${movie.title}** has already been suggested.`);
-
 			return;
 		}
 
