@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, ChannelType, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel } = require('discord.js');
 const { moviesDataChannelID } = require('../../config.json');
-const pollTracker = require('./pollTracker');
-const { getPollWinner } = require('./getPollWinner');
-const { getDayOptions } = require('./dayOptions');
+const pollTracker = require('./PollTrackerUtility');
+const { getPollWinner } = require('./GetPollWinner');
+const { getDayOptions } = require('./DayOptions');
 
 module.exports = {
 	data: new SlashCommandBuilder()

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const pollTracker = require('./pollTracker');
+const pollTracker = require('./PollTrackerUtility');
 const { getDayOptions } = require('./dayOptions');
 
 module.exports = {
