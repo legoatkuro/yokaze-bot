@@ -5,8 +5,14 @@ const { getDayOptions } = require('./dayOptions');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('pollday')
-		.setDescription('Poll for which day to watch the movie'),
+		.setDescription('Poll for which day to watch the movie')
+		.addIntegerOption((option) =>
+			option.setName('hours')
+				.setDescription('How many hours the poll stays open (default 24)')
+				.setMinValue(1)
+				.setMaxValue(768)),
 	async execute(interaction) {
+		const hours = interaction.options.getInteger('hours') ?? 24;
 		const options = getDayOptions();
 		const answers = options.map((option) => ({ text: option.label }));
 
@@ -14,7 +20,7 @@ module.exports = {
 			poll: {
 				question: { text: 'When should we watch it?' },
 				answers,
-				duration: 24,
+				duration: hours,
 				allowMultiselect: false,
 			},
 		});
