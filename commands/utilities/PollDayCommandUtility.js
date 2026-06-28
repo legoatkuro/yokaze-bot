@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
+const pollTracker = require('./pollTracker');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -29,5 +30,8 @@ module.exports = {
 				allowMultiselect: false,
 			},
 		});
+
+		const sentMessage = await interaction.fetchReply();
+		pollTracker.dayPoll = { channelId: sentMessage.channelId, messageId: sentMessage.id };
 	},
 };

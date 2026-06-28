@@ -1,5 +1,7 @@
 const { SlashCommandBuilder, ChannelType, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel } = require('discord.js');
 const { moviesDataChannelID } = require('../../config.json');
+const pollTracker = require('./pollTracker');
+const { getPollWinner } = require('./getPollWinner');
 
 function formatISODate(date) {
 	const year = date.getFullYear();
@@ -28,7 +30,7 @@ function getDayOptions() {
 
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName('schedule')
+		.setName('createevent')
 		.setDescription('Creates a movie night event from a suggestion')
 		.addStringOption((option) =>
 			option.setName('movie')
@@ -45,8 +47,32 @@ module.exports = {
 
 		if (focused.name === 'day') {
 			const options = getDayOptions();
+			const winnerText = await getPollWinner(interaction.client, pollTracker.dayPoll);
+
+			let winnerValue = null;
+			if (winnerText) {
+				const dateMatch = winnerText.match(/\(([^)]+)\)/);
+				if (dateMatch) {
+					const parsedDate = new Date(`${dateMatch[1]} ${new Date().getFullYear()}`);
+					if (!isNaN(parsedDate.getTime())) {
+						winnerValue = formatISODate(parsedDate);
+					}
+				}
+			}
+
+			let orderedOptions = options;
+			if (winnerValue) {
+				const winnerOption = options.find((option) => option.value === winnerValue);
+				if (winnerOption) {
+					orderedOptions = [winnerOption, ...options.filter((option) => option.value !== winnerValue)];
+				}
+			}
+
 			await interaction.respond(
-				options.map((option) => ({ name: option.label, value: option.value })),
+				orderedOptions.map((option) => ({
+					name: option.value === winnerValue ? `⭐ ${option.label} (poll winner)` : option.label,
+					value: option.value,
+				})),
 			);
 			return;
 		}
@@ -58,12 +84,22 @@ module.exports = {
 			const messages = await moviesChannel.messages.fetch({ limit: 100 });
 			const titles = messages.map((message) => JSON.parse(message.content).title);
 
-			const matches = titles
+			const winnerTitle = await getPollWinner(interaction.client, pollTracker.moviePoll);
+
+			let orderedTitles = titles;
+			if (winnerTitle && titles.includes(winnerTitle)) {
+				orderedTitles = [winnerTitle, ...titles.filter((title) => title !== winnerTitle)];
+			}
+
+			const matches = orderedTitles
 				.filter((title) => title.toLowerCase().includes(typed.toLowerCase()))
 				.slice(0, 25);
 
 			await interaction.respond(
-				matches.map((title) => ({ name: title, value: title })),
+				matches.map((title) => ({
+					name: title === winnerTitle ? `⭐ ${title} (poll winner)` : title,
+					value: title,
+				})),
 			);
 		}
 	},

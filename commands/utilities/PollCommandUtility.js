@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { moviesDataChannelID } = require('../../config.json');
 const DISCORD_POLL_LIMIT = 10;
+const pollTracker = require('./pollTracker');
 
 module.exports = {
 	data: new SlashCommandBuilder().setName('poll').setDescription('Creates a poll deciding what movies to watch this week').addIntegerOption((option) =>
@@ -28,5 +29,8 @@ module.exports = {
 				allowMultiselect: false,
 			},
 		});
+
+		const sentMessage = await interaction.fetchReply();
+		pollTracker.moviePoll = { channelId: sentMessage.channelId, messageId: sentMessage.id };
 	},
 };
