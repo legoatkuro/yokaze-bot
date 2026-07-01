@@ -2,7 +2,7 @@
 
 With the YokazeBot, creating and scheduling movie nights becomes much easier. But, in order for this to work, we must first go over what each command does and how you should use them.
 
-Last updated: 28-6-2026
+Last updated: 1-7-2026
 
 ## User commands (members without movie-host-privileges)
 
@@ -13,6 +13,10 @@ This command allows you as a user to suggest a movie to be added to a poll. Simp
 ### /undo
 
 Accidentally suggested the wrong movie or are feeling bad about your pick? Simply use the /undo command to remove your latest suggestion.
+
+### /read
+
+This command gives you a list of all the movies that have been suggested.
 
 ## Movie Host Commands (members with movie-host privileges)
 
@@ -29,6 +33,10 @@ The optional field you can input after is hours the poll will be open. For examp
 This command is essentially a simpler version of the regular poll. In this case, it will just give you every day of the week as an answer. The option to watch a movie "today" does not exist, as the poll non-optionally runs for 24 hours. By the time that this poll ends, the day will have already passed. Users can choose their preferred day of the week to watch the movie. Times will always be the same: 21:00 Amsterdam Time.
 
 The optional field you can input after is hours the poll will be open. For example: /pollday 1 will mean the poll will be open for 1 hour. Discord will have a limited range for these, but if you don't input anything and just run /pollday, the standard time will be 24 hours.
+
+### /delete
+
+Allows you to delete a specific movie from the suggestion list. If its already outdated, or will not be removed using the /undo command by the user--you then would have the power to simply delete it yourself.
 
 ### /createevent
 
